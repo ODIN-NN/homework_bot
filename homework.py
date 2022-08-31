@@ -1,4 +1,4 @@
-""""Telegram бот для мониторинга статуса домашней работы на ЯП."""
+"""Telegram бот для мониторинга статуса домашней работы на ЯП."""
 
 
 import logging
@@ -44,7 +44,7 @@ logger.addHandler(handler)
 
 
 def send_message(bot, message):
-    """"Функция для отправки сообщений в чат телеграма."""
+    """Функция для отправки сообщений в чат телеграма."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info(f'Сообщение <{message}> отправлено в ваш чат.')
@@ -54,7 +54,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    """"Функция для получения ответа от API ЯП"""
+    """Функция для получения ответа от API ЯП."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     homework_response = requests.get(ENDPOINT,
@@ -73,7 +73,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Функция для проверки ответа API ЯП и выдачи данных о последней работе."""
+    """Функция для проверки ответа API и выдачи данных о последней работе."""
     if isinstance(response, dict):
         if isinstance(response['homeworks'], list):
             return response['homeworks']
@@ -97,7 +97,7 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """"Функция для проверки актуальности токенов."""
+    """Функция для проверки актуальности токенов."""
     if PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
         return True
     else:
