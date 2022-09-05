@@ -29,7 +29,3 @@ class StatusNone(Exception):
 class NameIsNone(Exception):
     """Исключение при пустом имени домашней работы."""
     pass
-
-
-class TokensError(Exception):
-    """Исключение при недоступности одного или нескольких токенов."""

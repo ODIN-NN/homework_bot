@@ -50,12 +50,13 @@ def send_message(bot, message):
     """Функция для отправки сообщений в чат телеграма."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info(f'Сообщение <{message}> отправлено в ваш чат.')
     except error.TelegramError as specific_error:
         raise exceptions.SendMessageError(f'Сообщение <{message}> '
                                           f'не удалось отправить в '
                                           f'чат в связи с ошибкой:'
                                           f'<{specific_error}>')
+    else:
+        logger.info(f'Сообщение <{message}> отправлено в ваш чат.')
 
 
 def get_api_answer(current_timestamp):
@@ -98,49 +99,44 @@ def check_response(response):
 
 def parse_status(homework):
     """Функция для выдачи сообщения о статусе последней домашней работы."""
-    if isinstance(homework, dict):
-        try:
-            homework_name = homework.get('homework_name')
-        except KeyError:
-            raise exceptions.NameIsNone('Имя домашней работы не указано.')
-        homework_status = homework.get('status')
-        if homework_status in HOMEWORK_VERDICTS:
-            verdict = HOMEWORK_VERDICTS[homework_status]
-        else:
-            raise KeyError('В ответе API ЯП неизвестный '
-                           'статус домашней работы.')
-        return f'Изменился статус проверки работы "{homework_name}". {verdict}'
-    else:
+    if not isinstance(homework, dict):
         raise TypeError('Элемент с инф-ей о последней'
                         'работе в ответе API не является словарём.')
+    if 'homework_name' in homework:
+        homework_name = homework.get('homework_name')
+    else:
+        raise KeyError('Имя домашней работы не указано.')
+    homework_status = homework.get('status')
+    if homework_status not in HOMEWORK_VERDICTS:
+        raise KeyError('В ответе API ЯП неизвестный '
+                       'статус домашней работы.')
+    else:
+        verdict = HOMEWORK_VERDICTS[homework_status]
+    return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def check_tokens():
     """Функция для проверки актуальности токенов."""
-    try:
-        return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
-    except Exception:
-        raise exceptions.TokensError('Отсутствует одна из'
-                                     'переменных окружения.')
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
     """Основная логика работы бота."""
     current_timestamp = int(time.time())
-    if check_tokens() is False:
+    if not check_tokens():
+        logger.critical('Токены недоступны.')
         sys.exit('Токены недоступны.')
+    bot = Bot(token=TELEGRAM_TOKEN)
     while True:
         try:
             response = get_api_answer(current_timestamp)
             homeworks = check_response(response)
             if homeworks:
                 message = parse_status(homeworks[0])
-                if homeworks != homeworks[0].get('status'):
-                    logger.info('Сообщение отправлено.')
-                else:
-                    logger.debug('Статус не изменился.')
-                    message = 'Статус домашней работы не изменился.'
                 send_message(bot, message)
+        except exceptions.SendMessageError as error:
+            logger.error(f'Ошибка <{error}> при отправке сообщения '
+                         f'в чат телеграма.')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             send_message(bot, message)
@@ -148,9 +144,9 @@ def main():
         else:
             logger.info('Программа работает без сбоев')
         finally:
+            current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
-    bot = Bot(token=TELEGRAM_TOKEN)
     main()
