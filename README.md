@@ -1,2 +1,15 @@
-# homework_bot
-python telegram bot
+# Проект Telegram-бот для отслеживания статуса домашней работы.
+
+### Описание
+Telegram-бот для отправки оповещений в чат Telegram в случае изменения статуса домашней
+работы. Бот работает с API сервиса Практикум.Домашка.
+
+### В проекте использовались следующие библиотеки:
+- pyrogram
+- python-telegram-bot
+- requests
+- dotenv
+- logging
+
+### Автор
+- [Александр Одинцов](https://github.com/ODIN-NN "Github page")
